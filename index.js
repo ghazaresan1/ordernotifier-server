@@ -18,7 +18,7 @@ const API_CONFIG = {
 };
 
 // Initialize Firebase Admin with service account
-const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
+const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS.replace(/\\"/g, '"'));
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     projectId: process.env.FIREBASE_PROJECT_ID
