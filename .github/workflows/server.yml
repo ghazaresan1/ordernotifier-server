@@ -11,6 +11,7 @@ jobs:
     env:
       FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_CREDENTIALS }}
       FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+      SECURITY_KEY: ${{ secrets.SECURITY_KEY }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
