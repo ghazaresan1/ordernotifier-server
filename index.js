@@ -6,7 +6,7 @@ const axios = require('axios');
 const app = express();
 app.use(express.json());
 
-const SECURITY_KEY = 'Asdiw2737y#376';
+const SECURITY_KEY = process.env.SECURITY_KEY;
 const CHECK_INTERVAL = 30000; // 30 seconds
 
 const API_CONFIG = {
