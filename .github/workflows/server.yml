@@ -14,8 +14,8 @@ jobs:
         with:
           node-version: '18'
       - run: npm install
-      - run: |
+      - name: Create .env file
+        run: |
+          echo "FIREBASE_CREDENTIALS='${{ secrets.FIREBASE_CREDENTIALS }}'" > .env
           echo "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" >> .env
-          echo "FIREBASE_CREDENTIALS=${{ secrets.FIREBASE_CREDENTIALS }}" >> .env
       - run: node index.js
-
