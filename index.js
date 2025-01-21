@@ -29,10 +29,13 @@ const activeUsers = new Map();
 
 // Endpoint to register new users
 app.post('/register', async (req, res) => {
+ console.log('Registration request received:', req.body);
     const { username, password, fcmToken } = req.body;
     
     try {
+    console.log('Authenticating user:', username);
         const authResponse = await authenticateUser(username, password);
+ console.log('Auth response:', authResponse);
         if (!authResponse.success) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
@@ -77,6 +80,7 @@ async function authenticateUser(username, password) {
 }
 
 async function checkOrders(username, password, fcmToken) {
+ console.log('Checking orders for user:', username);
     const user = activeUsers.get(fcmToken);
     if (!user) return;
 
@@ -102,6 +106,7 @@ async function checkOrders(username, password, fcmToken) {
         const newOrders = ordersResponse.data.filter(order => order.Status === 0);
         
         if (newOrders.length > 0) {
+console.log('New orders found:', newOrders.length);
             await admin.messaging().send({
                 token: fcmToken,
                 notification: {
