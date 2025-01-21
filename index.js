@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const admin = require('firebase-admin');
 const axios = require('axios');
@@ -22,7 +21,7 @@ const API_CONFIG = {
 const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    projectId: process.env.FIREBASE_PROJECT_ID
+   const projectId = process.env.FIREBASE_PROJECT_ID;
 });
 
 // Store active users and their check intervals
