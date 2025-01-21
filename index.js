@@ -1,8 +1,8 @@
-console.log('=== Server Starting ===');
 require('dotenv').config();
 const express = require('express');
 const admin = require('firebase-admin');
 const axios = require('axios');
+const fs = require('fs');
 
 const app = express();
 app.use(express.json());
@@ -18,8 +18,8 @@ const API_CONFIG = {
     }
 };
 
-// Initialize Firebase Admin with service account
-const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS.replace(/\\"/g, '"'));
+// Initialize Firebase Admin
+const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     projectId: process.env.FIREBASE_PROJECT_ID
@@ -28,18 +28,27 @@ admin.initializeApp({
 // Store active users and their check intervals
 const activeUsers = new Map();
 
-// Endpoint to register new users
-app.post('/register', async (req, res) => {
- console.log('=== New Registration Request ===');
-    console.log('Request Body:', req.body);
-    const { username, password, fcmToken } = req.body;
+// Handle GitHub repository dispatch events
+if (process.env.GITHUB_EVENT_PATH) {
+    const eventPayload = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'));
+    console.log('Event received:', eventPayload);
+    
+    if (eventPayload.event_type === 'register') {
+        const { username, password, fcmToken } = eventPayload.client_payload;
+        handleRegistration(username, password, fcmToken);
+    } else if (eventPayload.event_type === 'unregister') {
+        const { fcmToken } = eventPayload.client_payload;
+        handleUnregistration(fcmToken);
+    }
+}
+
+async function handleRegistration(username, password, fcmToken) {
     console.log('Processing registration for:', username);
     try {
-    console.log('Authenticating user:', username);
         const authResponse = await authenticateUser(username, password);
- console.log('Auth response:', authResponse);
         if (!authResponse.success) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+            console.log('Authentication failed for:', username);
+            return;
         }
 
         activeUsers.set(fcmToken, {
@@ -50,17 +59,25 @@ app.post('/register', async (req, res) => {
         });
         
         startChecking(fcmToken);
-        
-        res.json({ success: true, message: 'Registration successful' });
+        console.log('Registration successful for:', username);
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(500).json({ error: 'Registration failed' });
     }
-});
+}
+
+function handleUnregistration(fcmToken) {
+    console.log('Processing unregistration for token:', fcmToken);
+    const user = activeUsers.get(fcmToken);
+    
+    if (user && user.checkInterval) {
+        clearInterval(user.checkInterval);
+    }
+    
+    activeUsers.delete(fcmToken);
+    console.log('Unregistration successful');
+}
 
 async function authenticateUser(username, password) {
-console.log('=== Authentication Started ===');
-    console.log('Authenticating:', username);
     try {
         const authUrl = `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth}`;
         const response = await axios.post(authUrl, {
@@ -84,7 +101,6 @@ console.log('=== Authentication Started ===');
 }
 
 async function checkOrders(username, password, fcmToken) {
- console.log('=== Order Check ===');
     console.log('Checking orders for:', username);
     const user = activeUsers.get(fcmToken);
     if (!user) return;
@@ -111,7 +127,7 @@ async function checkOrders(username, password, fcmToken) {
         const newOrders = ordersResponse.data.filter(order => order.Status === 0);
         
         if (newOrders.length > 0) {
-console.log('New orders found:', newOrders.length);
+            console.log('New orders found:', newOrders.length);
             await admin.messaging().send({
                 token: fcmToken,
                 notification: {
@@ -141,19 +157,8 @@ function startChecking(fcmToken) {
     }, CHECK_INTERVAL);
 
     activeUsers.set(fcmToken, user);
+    console.log('Order checking started for token:', fcmToken);
 }
-
-app.post('/unregister', (req, res) => {
-    const { fcmToken } = req.body;
-    const user = activeUsers.get(fcmToken);
-    
-    if (user && user.checkInterval) {
-        clearInterval(user.checkInterval);
-    }
-    
-    activeUsers.delete(fcmToken);
-    res.json({ success: true });
-});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
