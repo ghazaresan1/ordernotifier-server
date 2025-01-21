@@ -21,7 +21,7 @@ const API_CONFIG = {
 const serviceAccount = JSON.parse(process.env.FIREBASE_CREDENTIALS);
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-   const projectId = process.env.FIREBASE_PROJECT_ID;
+    projectId: process.env.FIREBASE_PROJECT_ID
 });
 
 // Store active users and their check intervals
