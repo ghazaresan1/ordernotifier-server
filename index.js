@@ -29,7 +29,9 @@ const activeUsers = new Map();
 
 // Endpoint to register new users
 app.post('/register', async (req, res) => {
- console.log('Registration request received:', req.body);
+  console.log('=== Registration Request ===');
+    console.log('Username:', req.body.username);
+    console.log('FCM Token:', req.body.fcmToken);
     const { username, password, fcmToken } = req.body;
     
     try {
@@ -57,6 +59,8 @@ app.post('/register', async (req, res) => {
 });
 
 async function authenticateUser(username, password) {
+ console.log('=== Authentication Process ===');
+    console.log('Attempting authentication for:', username);
     try {
         const authUrl = `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth}`;
         const response = await axios.post(authUrl, {
@@ -80,7 +84,8 @@ async function authenticateUser(username, password) {
 }
 
 async function checkOrders(username, password, fcmToken) {
- console.log('Checking orders for user:', username);
+ console.log('=== Order Check ===');
+    console.log('Checking orders for:', username);
     const user = activeUsers.get(fcmToken);
     if (!user) return;
 
