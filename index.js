@@ -1,3 +1,4 @@
+console.log('=== Server Starting ===');
 require('dotenv').config();
 const express = require('express');
 const admin = require('firebase-admin');
@@ -29,11 +30,10 @@ const activeUsers = new Map();
 
 // Endpoint to register new users
 app.post('/register', async (req, res) => {
-  console.log('=== Registration Request ===');
-    console.log('Username:', req.body.username);
-    console.log('FCM Token:', req.body.fcmToken);
+ console.log('=== New Registration Request ===');
+    console.log('Request Body:', req.body);
     const { username, password, fcmToken } = req.body;
-    
+    console.log('Processing registration for:', username);
     try {
     console.log('Authenticating user:', username);
         const authResponse = await authenticateUser(username, password);
@@ -59,8 +59,8 @@ app.post('/register', async (req, res) => {
 });
 
 async function authenticateUser(username, password) {
- console.log('=== Authentication Process ===');
-    console.log('Attempting authentication for:', username);
+console.log('=== Authentication Started ===');
+    console.log('Authenticating:', username);
     try {
         const authUrl = `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth}`;
         const response = await axios.post(authUrl, {
